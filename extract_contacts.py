@@ -40,7 +40,7 @@ try:
 
     # Wait for user to scan QR code and log in
     print("Please scan the QR code to log in.")
-    time.sleep(30)  # Increase if needed
+    time.sleep(60)  # Increased sleep time for QR code scanning
 
     # Click on the group by its title within the pane-side div
     group_title = "IT$olutionJobs8"
@@ -53,7 +53,7 @@ try:
     print("Clicked on the group")
 
     # Wait for the group chat to load
-    time.sleep(5)
+    time.sleep(10)
 
     # Click on the group info
     info_button = wait_for_element('div[class="x78zum5 x1cy8zhl xisnujt x1nxh6w3 xcgms0a x16cd2qt"]')
@@ -61,45 +61,45 @@ try:
     print("Clicked on group info")
 
     # Wait for group info to load
-    time.sleep(5)
+    time.sleep(10)
 
     # Click on "view all" to show all members
     view_all_button = wait_for_element('div[class="x1iyjqo2 x1yc453h x1n68mz9"]')
     view_all_button.click()
-    print("Clicked on 'view all' to show all members") #we dont have to print this we need data from this div class( class="_ak8l")
+    print("Clicked on 'view all' to show all members")
 
     # Wait for the members div to load
-    time.sleep(5)
+    time.sleep(10)
 
-    # Scroll to load all contacts
-    contacts = []
+    # Scroll to load all contacts incrementally
     members_div_class = 'x1n2onr6 x1n2onr6 xyw6214 x78zum5 x1r8uery x1iyjqo2 xdt5ytf x6ikm8r x1odjw0f x1hc1fzr x1tkvqr7'
     members_div = driver.find_element(By.CSS_SELECTOR, f'div[class="{members_div_class}"]')
     
-    last_height = driver.execute_script("return arguments[0].scrollHeight", members_div)
-    while True:
-        # Scroll down
-        driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", members_div)
-        time.sleep(3)  # Adjust sleep time if needed
-        
-        # Check new scroll height and compare with last height
-        new_height = driver.execute_script("return arguments[0].scrollHeight", members_div)
-        if new_height == last_height:
-            break
-        last_height = new_height
+    numbers = []  # Initialize list to store contact numbers
+
+    # Ensure the scrollable area is targeted
+    driver.execute_script("arguments[0].scrollTop = 0;", members_div)  # Scroll to top
     
-    print ("456",members_div.get_attribute('outerHTML'))
-    #     # Collect all contacts
-    #     contacts_elements = driver.find_elements(By.CSS_SELECTOR, 'span[class="_ao3e"]')
-    #     for contact in contacts_elements:
-    #         contact_text = contact.text.strip()
-    #         if contact_text and contact_text not in contacts:
-    #             contacts.append(contact_text)
+    while True:
+        # Fetch and store contacts from the visible part of the members div
+        new_members = driver.find_elements(By.CSS_SELECTOR, 'div._ak8l > div._ak8o > div._ak8q > div._aou8 > span._ao3e')
+        for member in new_members:
+            number = member.text
+            if number not in numbers:  # Avoid duplicates
+                numbers.append(number)
+        
+        # Scroll down a small amount
+        driver.execute_script("arguments[0].scrollTop += 1600;", members_div)  # Scroll down by 300 pixels
+        time.sleep(2)  # Adjust sleep time as needed
 
+        # Check if we reached the end
+        new_members = driver.find_elements(By.CSS_SELECTOR, 'div._ak8l > div._ak8o > div._ak8q > div._aou8 > span._ao3e')
+        if not new_members:
+            break
 
-    # # Print all collected contacts
-    # for contact in contacts:
-    #     print(contact)
+    # Print or process the numbers as needed
+    for number in numbers:
+        print(number)
 
 except Exception as e:
     print(f"An error occurred: {e}")
@@ -107,3 +107,13 @@ except Exception as e:
 finally:
     # Close the WebDriver
     driver.quit()
+
+
+
+import pandas as pd
+
+# Convert list to Pandas DataFrame
+df = pd.DataFrame(numbers, columns=['Numbers'])
+
+# Write DataFrame to Excel
+df.to_csv(df, index=False)
