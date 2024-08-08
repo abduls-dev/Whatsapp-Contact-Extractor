@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import csv
 import os
 
 # Path to chromedriver executable
@@ -101,19 +102,26 @@ try:
     for number in numbers:
         print(number)
 
+    phone_numbers_with_plus = [number for number in numbers if number.startswith('+')]
+
+    # Define the CSV file path
+    csv_file_path = 'phone_numbers.csv'
+
+    # Write the phone numbers to the CSV file
+    with open(csv_file_path, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        # Write a header (optional)
+        writer.writerow(['PhoneNumber'])
+        # Write each phone number as a new row
+        for number in phone_numbers_with_plus:
+            writer.writerow([number])
+
+    print(f"Phone numbers exported to {csv_file_path}")
+
+
 except Exception as e:
     print(f"An error occurred: {e}")
 
 finally:
     # Close the WebDriver
     driver.quit()
-
-
-
-import pandas as pd
-
-# Convert list to Pandas DataFrame
-df = pd.DataFrame(numbers, columns=['Numbers'])
-
-# Write DataFrame to Excel
-df.to_csv(df, index=False)
